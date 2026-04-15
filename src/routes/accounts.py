@@ -405,7 +405,7 @@ async def reset_password(
             detail="An error occurred while resetting the password.",
         )
     else:
-        login_link = "http://127.0.0.1/accounts/login/"
+        login_link = "http://test.com/api/v1/accounts/login/"
 
         background_tasks.add_task(
             email_sender.send_password_reset_complete_email, str(user.email), login_link

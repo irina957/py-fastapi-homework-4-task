@@ -1,6 +1,7 @@
 from datetime import date
 from fastapi import Form, File, UploadFile
-from pydantic import BaseModel, field_validator, ConfigDict, HttpUrl
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, field_validator, ConfigDict, HttpUrl, ValidationError
 from validation import validate_name, validate_gender, validate_birth_date
 
 
@@ -43,21 +44,45 @@ class ProfileCreateSchema(BaseModel):
         validate_birth_date(v)
         return v
 
+    @field_validator("info")
+    @classmethod
+    def check_info(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Info field cannot be empty or contain only spaces.")
+        return v
+
+    @field_validator("avatar")
+    @classmethod
+    def check_avatar(cls, v: UploadFile) -> UploadFile:
+        if v.content_type not in ["image/jpeg", "image/png"]:
+            raise ValueError("Invalid image format")
+        if v.size > 1024 * 1024:
+            raise ValueError("Image size exceeds 1 MB")
+        return v
+
     @classmethod
     def as_form(
-        cls,
-        first_name: str = Form(...),
-        last_name: str = Form(...),
-        gender: str = Form(...),
-        date_of_birth: date = Form(...),
-        info: str = Form(...),
-        avatar: UploadFile = File(...),
+            cls,
+            first_name: str = Form(...),
+            last_name: str = Form(...),
+            gender: str = Form(...),
+            date_of_birth: date = Form(...),
+            info: str = Form(...),
+            avatar: UploadFile = File(...)
     ):
-        return cls(
-            first_name=first_name,
-            last_name=last_name,
-            gender=gender,
-            date_of_birth=date_of_birth,
-            info=info,
-            avatar=avatar,
-        )
+        try:
+            return cls(
+                first_name=first_name,
+                last_name=last_name,
+                gender=gender,
+                date_of_birth=date_of_birth,
+                info=info,
+                avatar=avatar
+            )
+        except ValidationError as e:
+            errors = e.errors()
+            for error in errors:
+                error.pop('input', None)
+                error.pop('ctx', None)
+
+            raise RequestValidationError(errors)
