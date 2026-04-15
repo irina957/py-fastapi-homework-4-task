@@ -62,13 +62,13 @@ class ProfileCreateSchema(BaseModel):
 
     @classmethod
     def as_form(
-            cls,
-            first_name: str = Form(...),
-            last_name: str = Form(...),
-            gender: str = Form(...),
-            date_of_birth: date = Form(...),
-            info: str = Form(...),
-            avatar: UploadFile = File(...)
+        cls,
+        first_name: str = Form(...),
+        last_name: str = Form(...),
+        gender: str = Form(...),
+        date_of_birth: date = Form(...),
+        info: str = Form(...),
+        avatar: UploadFile = File(...),
     ):
         try:
             return cls(
@@ -77,12 +77,12 @@ class ProfileCreateSchema(BaseModel):
                 gender=gender,
                 date_of_birth=date_of_birth,
                 info=info,
-                avatar=avatar
+                avatar=avatar,
             )
         except ValidationError as e:
             errors = e.errors()
             for error in errors:
-                error.pop('input', None)
-                error.pop('ctx', None)
+                error.pop("input", None)
+                error.pop("ctx", None)
 
             raise RequestValidationError(errors)
