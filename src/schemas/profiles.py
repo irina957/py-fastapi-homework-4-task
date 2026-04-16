@@ -2,7 +2,7 @@ from datetime import date
 from fastapi import Form, File, UploadFile
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, field_validator, ConfigDict, HttpUrl, ValidationError
-from validation import validate_name, validate_gender, validate_birth_date
+from validation import validate_name, validate_gender, validate_birth_date, validate_image
 
 
 class ProfileResponseSchema(BaseModel):
@@ -54,10 +54,7 @@ class ProfileCreateSchema(BaseModel):
     @field_validator("avatar")
     @classmethod
     def check_avatar(cls, v: UploadFile) -> UploadFile:
-        if v.content_type not in ["image/jpeg", "image/png"]:
-            raise ValueError("Invalid image format")
-        if v.size > 1024 * 1024:
-            raise ValueError("Image size exceeds 1 MB")
+        validate_image(v)
         return v
 
     @classmethod
